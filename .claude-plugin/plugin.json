@@ -1,0 +1,40 @@
+{
+  "name": "cache-warm",
+  "version": "0.1.0",
+  "author": { "name": "Bastian Fuchs" },
+  "description": "Claude Code mod that shows the prompt-cache countdown in the footer and keeps the cache warm while you are away.",
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "autoStart": {
+      "type": "boolean",
+      "title": "Start with every session",
+      "description": "Whether cache-warm is on when a session starts. Off: type /cache-warm start to turn it on for that session.",
+      "default": true
+    },
+    "cacheTtlMinutes": {
+      "type": "string",
+      "title": "Cache lifetime (minutes)",
+      "description": "How long the prompt cache lives after a request has used it, counted from the start of that request: 5 for the standard cache, 60 for the 1-hour cache. A wrong value wastes money.",
+      "options": ["5", "60"],
+      "default": "5"
+    },
+    "refreshLeadSeconds": {
+      "type": "number",
+      "title": "Refresh lead (seconds)",
+      "description": "A refresh is sent this long before the cache expires. 5 to 600, and at most half the cache lifetime.",
+      "default": 30
+    },
+    "idleLimitMinutes": {
+      "type": "number",
+      "title": "Idle limit (minutes)",
+      "description": "No refreshes once the last prompt is older than this. 1 to 720.",
+      "default": 30
+    },
+    "debugWarnings": {
+      "type": "boolean",
+      "title": "Debug warnings",
+      "description": "For watching the cache: a warning line under the prompt and a counter in /cache-warm status when a request reads less than half of its input from a cache the footer shows as warm. A large pasted prompt can trigger it too.",
+      "default": false
+    }
+  }
+}

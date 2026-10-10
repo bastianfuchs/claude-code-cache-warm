@@ -1,0 +1,6 @@
+{
+  "name": "cache-warm",
+  "description": "Claude Code mod that shows the prompt-cache countdown in the footer and keeps the cache warm while you are away.",
+  "owner": { "name": "Bastian Fuchs" },
+  "plugins": [{ "name": "cache-warm", "source": "./" }]
+}
