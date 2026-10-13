@@ -24,6 +24,9 @@ export type CacheWarm = {
   // debugWarnings: requests that read under half their input from a cache that looked
   // warm
   rewriteCount?: number
+  // what made the latest request that renewed the cache; named in the debugWarnings
+  // line
+  lastUse?: 'turn' | 'refresh'
   note: string
 }
 

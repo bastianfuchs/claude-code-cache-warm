@@ -3,6 +3,23 @@
 All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.1.1] - 2026-10-13
+
+### Fixed
+
+- Refreshes now carry their start time in the prompt. With a fixed text, later
+  refreshes of a run could come back as a copy of the first, which renews nothing,
+  and the next prompt then rewrote almost the whole cache. The cause is not known.
+
+### Added
+
+- The `debugWarnings` line says whether a turn or a refresh made the last cache use.
+
+### Known issue
+
+- Many refreshes read the context twice from the cache and cost twice as much as
+  expected. The cause is not known. The README says so under Cost.
+
 ## [0.1.0] - 2026-10-12
 
 ### Added

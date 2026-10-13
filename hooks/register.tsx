@@ -121,7 +121,9 @@ const isMostlyUncached = (u: RequestUsage) => {
 // Pinned as the status line under the prompt, where it stays until the next prompt
 // clears it. `$` is typed `any` as in tick.
 // The timing tells a server-side early eviction (the footer had time left, the last
-// cache use was recent) from a long gap (a sleeping machine, a stalled clock).
+// cache use was recent) from a long gap (a sleeping machine, a stalled clock). Who
+// made that last use matters too: a refresh may reach a cache entry that a turn does
+// not, or the other way round.
 // `before` is the atom as it was when the request started; its expiresAt is not null.
 async function warnRewrite(
   $: any,
@@ -139,7 +141,8 @@ async function warnRewrite(
     `${source} read ${u.cache_read_input_tokens} and wrote ` +
       `${u.cache_creation_input_tokens} tokens although the cache looked warm ` +
       `(${fmt(expiresAt - startedAt)} left, last cache use ` +
-      `${fmt(startedAt - (expiresAt - CACHE_TTL_MS))} ago)`,
+      `${fmt(startedAt - (expiresAt - CACHE_TTL_MS))} ago` +
+      `${before.lastUse === undefined ? '' : `, by ${before.lastUse}`})`,
   )
 }
 
@@ -196,7 +199,16 @@ async function tick($: any) {
     // serves the whole conversation from its cache, which renews the TTL; only the
     // short prompt is computed fresh. Before the first reply there is nothing to fork.
     try {
-      r = await $.model.fork({ prompt: 'cache refresh: reply with "ok" only.' })
+      // The start time makes every prompt different. Measured with a fixed text: the
+      // second and third refresh of a run returned the numbers of the first, to the
+      // token (1.6 s instead of 7 to 18 s), and the next prompt then found only the
+      // system prompt and tools cached. With the start time in the text, four runs in a
+      // row kept the cache. That a repeated text is answered from somewhere other than
+      // the model is a reading of these numbers, not something we saw; where it would
+      // happen is unknown. Why a fixed text sometimes worked is unknown too.
+      r = await $.model.fork({
+        prompt: `cache refresh ${startedAt}: reply with "ok".`,
+      })
     } catch {
       r = { isAnswered: false as const, reason: 'error' }
     }
@@ -242,6 +254,7 @@ async function tick($: any) {
       refreshCount: x.refreshCount + 1,
       totalRefreshCount: (x.totalRefreshCount ?? 0) + 1,
       expiresAt: startedAt + CACHE_TTL_MS,
+      lastUse: 'refresh',
       note: '',
     }))
   } finally {
@@ -443,7 +456,9 @@ export const register: Register = (on, options) => {
     if (r.usage !== null) {
       const now = await $.clock.now()
       await update($, cache, (c: CacheWarm) =>
-        c.expiresAt === null ? c : { ...c, now, expiresAt: startedAt + CACHE_TTL_MS },
+        c.expiresAt === null
+          ? c
+          : { ...c, now, expiresAt: startedAt + CACHE_TTL_MS, lastUse: 'turn' },
       )
       if (DEBUG_WARNINGS && isWarm && isMostlyUncached(r.usage)) {
         await warnRewrite($, 'turn step', r.usage, before, startedAt)

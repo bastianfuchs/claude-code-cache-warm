@@ -105,7 +105,7 @@ Install shows a screen for these options. Later, change them in the config menu
 | `cacheTtlMinutes` | 5 | Cache lifetime, a choice of `5` (standard cache) or `60` (1-hour cache). |
 | `refreshLeadSeconds` | 30 | A refresh is sent this long before the cache expires. Accepted: 5 to 600, and the effective lead is capped at half of `cacheTtlMinutes` (150 s at 5 minutes). |
 | `idleLimitMinutes` | 30 | No refreshes once your last prompt is older than this. |
-| `debugWarnings` | off | For watching the cache: a warning line under the prompt and an `unexpected rewrites (estimated)` counter in `/cache-warm status` when a request reads less than half of its input from a cache the footer shows as warm. Covers your turns and the refreshes. The line also gives the time the footer showed as left and the time since the last cache use, which tells an early eviction from a long gap. A large pasted prompt can trigger it too. The line stays until your next prompt. |
+| `debugWarnings` | off | For watching the cache: a warning line under the prompt and an `unexpected rewrites (estimated)` counter in `/cache-warm status` when a request reads less than half of its input from a cache the footer shows as warm. Covers your turns and the refreshes. The line also gives the time the footer showed as left, the time since the last cache use and whether a turn or a refresh made it, which tells an early eviction from a long gap. A large pasted prompt can trigger it too. The line stays until your next prompt. |
 
 A value that is not a number or out of range (5 to 600 seconds lead, 1 to 720
 minutes idle limit) falls back to its default.
@@ -138,8 +138,16 @@ Examples, with the prices per million tokens for a cache read and for a cache wr
 Output tokens add a little per refresh. Six refreshes cost less than one rewrite,
 but they are wasted if you do not come back. Other models have other prices and
 another ratio between a cache read and a cache write, so the numbers above do not
-carry over. Check the
-[pricing page](https://platform.claude.com/docs/en/about-claude/pricing).
+carry over. They are the prices of the Anthropic API. Other services such as Amazon
+Bedrock can charge more, depending on the region. Check the
+[pricing page](https://platform.claude.com/docs/en/about-claude/pricing) and your
+provider's price list.
+
+> **Refreshes can cost twice as much as the table says.** In testing (Sonnet 5.5, a
+> context of about 270k tokens), roughly three in four refreshes read the context twice
+> from the cache and cost twice as much, about $0.07 instead of $0.03. The rest read it
+> once. The cause is not known. Check the bill of your provider to see what refreshes
+> cost in your setup.
 
 The footer assumes that caching works and says `warm` from your first prompt. The
 first refresh checks that: it must read at least some tokens from the cache. If it
