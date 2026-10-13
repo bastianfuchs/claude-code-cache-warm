@@ -33,7 +33,7 @@
     "debugWarnings": {
       "type": "boolean",
       "title": "Debug warnings",
-      "description": "For watching the cache: a warning line under the prompt and a counter in /cache-warm status when a request reads less than half of its input from a cache the footer shows as warm. A large pasted prompt can trigger it too.",
+      "description": "For watching the cache: a warning line under the prompt and a counter in /cache-warm status when a request reads less than half of its input from a cache the footer shows as warm, and a warning line when a refresh reads far more from the cache than the last request of your turn took in. A large pasted prompt can trigger the first one too.",
       "default": false
     }
   }

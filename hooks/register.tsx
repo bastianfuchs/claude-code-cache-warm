@@ -1,7 +1,7 @@
 // cache-warm: shows the prompt-cache TTL in the footer and keeps the cache warm.
 //
 // The model API caches the conversation prefix for 5 minutes, counted from the start of
-// each request that uses it; a cached read costs a tenth of an uncached one. After a
+// each request that uses it; a cached read costs a fraction of an uncached one. After a
 // longer pause the next prompt pays full price for the whole context. This mod sends a
 // tiny side request shortly before the TTL runs out, which renews it, until the user
 // has been idle for IDLE_LIMIT_MS.
@@ -18,7 +18,7 @@ import type { Register } from 'claude-code'
 
 import type { CacheWarm } from '../types'
 
-// The four values below come from the plugin's userConfig (see plugin.json); register
+// The five values below come from the plugin's userConfig (see plugin.json); register
 // fills them on every load, the defaults hold until then.
 // How long the prompt cache lives after a request has read or written it, counted from
 // the start of that request (5 min on API keys).
@@ -31,8 +31,9 @@ let IDLE_LIMIT_MS = 30 * 60_000
 // for the running session.
 let AUTO_START = true
 // Whether a request that read less than half its input from a cache the footer calls
-// warm raises a warning line and is counted. For watching the cache behaviour, off by
-// default.
+// warm raises a warning line and is counted, and a refresh that read far more than
+// the last request of a turn took in raises a warning line. For watching the cache
+// behaviour, off by default.
 let DEBUG_WARNINGS = false
 // A refresh at least this slow shows its duration in the footer.
 const SLOW_REFRESH_MS = 10_000
