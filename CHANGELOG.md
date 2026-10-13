@@ -3,6 +3,13 @@
 All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.0] - 2026-10-13
+
+### Changed
+
+- The footer shows the duration of a refresh when it took half of the refresh lead or
+  longer (15 seconds with the default), not from a fixed 10 seconds.
+
 ## [0.2.1] - 2026-10-13
 
 ### Fixed

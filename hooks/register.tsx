@@ -35,8 +35,6 @@ let AUTO_START = true
 // the last request of a turn took in raises a warning line. For watching the cache
 // behaviour, off by default.
 let DEBUG_WARNINGS = false
-// A refresh at least this slow shows its duration in the footer.
-const SLOW_REFRESH_MS = 10_000
 // After a failed refresh, wait this long before trying again.
 const RETRY_DELAY_MS = 15_000
 // How long a toast stays; the host's default of 4 s is easy to miss.
@@ -92,9 +90,11 @@ const describe = (c: CacheWarm) => {
       ? 'cold'
       : `warm ${fmt(left)}`
   // The count tells that refreshes ran since the last prompt; the duration is only
-  // worth showing when a refresh was slow.
+  // worth showing when a refresh was slow: it took half the refresh lead or longer, so
+  // the lead is getting tight. The lead scales with the setting, a fixed limit would
+  // not fit a large context.
   const slow =
-    c.lastRefreshMs !== undefined && c.lastRefreshMs >= SLOW_REFRESH_MS
+    c.lastRefreshMs !== undefined && c.lastRefreshMs >= REFRESH_LEAD_MS / 2
       ? `, last ${(c.lastRefreshMs / 1000).toFixed(1)}s`
       : ''
   const refreshes =

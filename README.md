@@ -41,7 +41,7 @@ your sessions). The mod is active right away.
 | `cache cold` | Cache has expired (or a compaction or a model switch just ran). The next prompt rewrites it. |
 | `cache keep-warm off` | The first refresh found no cache hit; the mod switched itself off. |
 | `(N refreshes)` | Refreshes sent since your last prompt. Starts again from 0 with each prompt. |
-| `, last X.Xs` | Added inside the brackets when the latest refresh took 10 seconds or more. |
+| `, last X.Xs` | Added inside the brackets when the latest refresh took half of the refresh lead or longer (15 seconds with the default lead of 30). |
 | `paused (turn)` | A turn is running; it renews the cache itself, so no refresh is sent. The countdown restarts at your prompt and again with each model request of the turn. |
 | `paused (compact)` | A compaction is running; a refresh would warm a context about to be replaced. |
 | `paused (until next prompt)` | You typed `/cache-warm pause`. No refreshes; your next prompt ends it. |
