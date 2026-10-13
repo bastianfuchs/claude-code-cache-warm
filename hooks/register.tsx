@@ -118,13 +118,23 @@ const isMostlyUncached = (u: RequestUsage) => {
   return total > 0 && read * 2 < total
 }
 
-// A refresh whose cache read reached this multiple of the input of the last model
-// request of a turn read the context about twice. Single reads measured 1.0 times,
-// double reads 2.0 times; the threshold sits between them.
+// A refresh normally reads about as many tokens from the cache as the last request of
+// a turn took in. At this multiple of that it counts as read twice.
 const DOUBLE_READ_FACTOR = 1.8
 
 const inputOf = (u: RequestUsage) =>
   u.input_tokens + u.cache_read_input_tokens + u.cache_creation_input_tokens
+
+// Pinned as the status line under the prompt, where it stays until the next prompt
+// clears it, for a refresh that read far more from the cache than the last request of
+// a turn took in. `$` is typed `any` as in tick.
+function warnDoubleRead($: any, u: RequestUsage, lastInputTokens: number) {
+  $.ui.status(
+    `refresh read ${u.cache_read_input_tokens} tokens from the cache, ` +
+      `${(u.cache_read_input_tokens / lastInputTokens).toFixed(1)} times the ` +
+      `${lastInputTokens} the last request took in`,
+  )
+}
 
 // Pinned as the status line under the prompt, where it stays until the next prompt
 // clears it. `$` is typed `any` as in tick.
@@ -207,15 +217,12 @@ async function tick($: any) {
     // serves the whole conversation from its cache, which renews the TTL; only the
     // short prompt is computed fresh. Before the first reply there is nothing to fork.
     try {
-      // The start time makes every prompt different. Measured with a fixed text: the
-      // second and third refresh of a run returned the numbers of the first, to the
-      // token (1.6 s instead of 7 to 18 s), and the next prompt then found only the
-      // system prompt and tools cached. With the start time in the text, four runs in a
-      // row kept the cache. That a repeated text is answered from somewhere other than
-      // the model is a reading of these numbers, not something we saw; where it would
-      // happen is unknown. Why a fixed text sometimes worked is unknown too.
+      // The start time makes every prompt different. The text says what the request is
+      // and what to answer, so the model has nothing to look into.
       r = await $.model.fork({
-        prompt: `cache refresh ${startedAt}: reply with "ok".`,
+        prompt:
+          `Automated keep-alive ${startedAt}: no tools, no commentary, ` +
+          'your entire reply is "ok".',
       })
     } catch {
       r = { isAnswered: false as const, reason: 'error' }
@@ -255,13 +262,16 @@ async function tick($: any) {
     if (DEBUG_WARNINGS && isMostlyUncached(r.usage)) {
       await warnRewrite($, 'refresh', r.usage, c, startedAt)
     }
-    const isDoubleRead =
+    if (
+      DEBUG_WARNINGS &&
       c.lastInputTokens !== undefined &&
       r.usage.cache_read_input_tokens >= c.lastInputTokens * DOUBLE_READ_FACTOR
+    ) {
+      warnDoubleRead($, r.usage, c.lastInputTokens)
+    }
     await update($, cache, (x: CacheWarm) => ({
       ...x,
       isVerified: true,
-      doubleReadCount: (x.doubleReadCount ?? 0) + (isDoubleRead ? 1 : 0),
       lastRefreshMs,
       refreshCount: x.refreshCount + 1,
       totalRefreshCount: (x.totalRefreshCount ?? 0) + 1,
@@ -391,7 +401,6 @@ export const register: Register = (on, options) => {
           : 'stopped (start with /cache-warm start)',
       ...(c.expiresAt === null ? ['no turn completed yet, no countdown'] : []),
       `refreshes sent: ${c.totalRefreshCount ?? 0}`,
-      `refreshes with double-reads (estimated): ${c.doubleReadCount ?? 0}`,
       `cold prompts (estimated): ${c.coldPromptCount ?? 0}`,
       ...(DEBUG_WARNINGS
         ? [`unexpected rewrites (estimated): ${c.rewriteCount ?? 0}`]
@@ -469,7 +478,7 @@ export const register: Register = (on, options) => {
     if (r.usage !== null) {
       const now = await $.clock.now()
       // lastInputTokens is kept even before the first turn has completed (expiresAt is
-      // still null): that turn's own steps are all a refresh can be compared with.
+      // still null): a refresh is compared with that turn's own steps.
       await update($, cache, (c: CacheWarm) =>
         c.expiresAt === null
           ? { ...c, lastInputTokens: inputOf(r.usage) }

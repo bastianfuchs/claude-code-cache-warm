@@ -76,12 +76,6 @@ runs. To disable the mod for good, use `/plugin disable cache-warm`.
 The counters count per session and start at 0 with a new one:
 
 - **refreshes sent:** all successful refreshes so far, across prompts.
-- **refreshes with double-reads (estimated):** refreshes whose cache read was at
-  least 1.8 times the input of the last model request of your last turn, so they read
-  the context about twice (see [Cost](#cost)). Subtract it from `refreshes sent` to
-  get the refreshes that read it once. A refresh with no such request to compare with,
-  such as the first one after `/clear`, a compaction or a model switch, counts as
-  read once. An estimate from token counts: the bill is not looked at.
 - **cold prompts (estimated):** prompts sent after the countdown had reached `cold`
   because the cache lifetime ran out, which paid the full price to rewrite the
   context. Prompts after a compaction, a model switch, `/clear` or a pause are not
@@ -112,7 +106,7 @@ Install shows a screen for these options. Later, change them in the config menu
 | `cacheTtlMinutes` | 5 | Cache lifetime, a choice of `5` (standard cache) or `60` (1-hour cache). |
 | `refreshLeadSeconds` | 30 | A refresh is sent this long before the cache expires. Accepted: 5 to 600, and the effective lead is capped at half of `cacheTtlMinutes` (150 s at 5 minutes). |
 | `idleLimitMinutes` | 30 | No refreshes once your last prompt is older than this. |
-| `debugWarnings` | off | For watching the cache: a warning line under the prompt and an `unexpected rewrites (estimated)` counter in `/cache-warm status` when a request reads less than half of its input from a cache the footer shows as warm. Covers your turns and the refreshes. The line also gives the time the footer showed as left, the time since the last cache use and whether a turn or a refresh made it, which tells an early eviction from a long gap. A large pasted prompt can trigger it too. The line stays until your next prompt. |
+| `debugWarnings` | off | For watching the cache: a warning line under the prompt and an `unexpected rewrites (estimated)` counter in `/cache-warm status` when a request reads less than half of its input from a cache the footer shows as warm. Covers your turns and the refreshes. The line also gives the time the footer showed as left, the time since the last cache use and whether a turn or a refresh made it, which tells an early eviction from a long gap. A large pasted prompt can trigger it too. A second line warns when a refresh read at least 1.8 times as many tokens from the cache as the last request of your turn took in, which a refresh does not normally do. Each line stays until your next prompt. |
 
 A value that is not a number or out of range (5 to 600 seconds lead, 1 to 720
 minutes idle limit) falls back to its default.
@@ -149,13 +143,6 @@ carry over. They are the prices of the Anthropic API. Other services such as Ama
 Bedrock can charge more, depending on the region. Check the
 [pricing page](https://platform.claude.com/docs/en/about-claude/pricing) and your
 provider's price list.
-
-> **Refreshes can cost twice as much as the table says.** In testing (Sonnet 5.5, a
-> context of about 270k tokens), roughly three in four refreshes read the context twice
-> from the cache and cost twice as much, about $0.07 instead of $0.03. The rest read it
-> once. The cause is not known. `/cache-warm status` counts the refreshes with
-> double-reads. Check the bill of your provider to see what refreshes cost in your
-> setup.
 
 The footer assumes that caching works and says `warm` from your first prompt. The
 first refresh checks that: it must read at least some tokens from the cache. If it

@@ -3,6 +3,26 @@
 All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.2.1] - 2026-10-13
+
+### Fixed
+
+- The refresh prompt now says that it is an automated keep-alive, that no tools are
+  to be used and that the whole reply is "ok". Before, many refreshes read the
+  context twice from the cache, which is a second model request per refresh. The
+  likely cause was that the model tried to use a tool or to look into the prompt;
+  with the new text this no longer showed in testing.
+
+### Added
+
+- With `debugWarnings` on, a warning line says when a refresh read at least 1.8 times
+  as many tokens from the cache as the last request of your turn took in.
+
+### Removed
+
+- The counter for refreshes with double-reads in `/cache-warm status`, which 0.2.0
+  added. The warning line replaces it.
+
 ## [0.2.0] - 2026-10-13
 
 ### Added
@@ -21,11 +41,6 @@ All notable changes to this project are documented here. The format follows
 ### Added
 
 - The `debugWarnings` line says whether a turn or a refresh made the last cache use.
-
-### Known issue
-
-- Many refreshes read the context twice from the cache and cost twice as much as
-  expected. The cause is not known. The README says so under Cost.
 
 ## [0.1.0] - 2026-10-12
 

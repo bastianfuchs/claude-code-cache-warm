@@ -1,6 +1,6 @@
 {
   "name": "cache-warm",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "author": { "name": "Bastian Fuchs" },
   "description": "Claude Code mod that shows the prompt-cache countdown in the footer and keeps the cache warm while you are away.",
   "types": "./types/index.d.ts",
