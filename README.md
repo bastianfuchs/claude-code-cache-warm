@@ -76,6 +76,12 @@ runs. To disable the mod for good, use `/plugin disable cache-warm`.
 The counters count per session and start at 0 with a new one:
 
 - **refreshes sent:** all successful refreshes so far, across prompts.
+- **refreshes with double-reads (estimated):** refreshes whose cache read was at
+  least 1.8 times the input of the last model request of your last turn, so they read
+  the context about twice (see [Cost](#cost)). Subtract it from `refreshes sent` to
+  get the refreshes that read it once. A refresh with no such request to compare with,
+  such as the first one after `/clear`, a compaction or a model switch, counts as
+  read once. An estimate from token counts: the bill is not looked at.
 - **cold prompts (estimated):** prompts sent after the countdown had reached `cold`
   because the cache lifetime ran out, which paid the full price to rewrite the
   context. Prompts after a compaction, a model switch, `/clear` or a pause are not
@@ -90,9 +96,10 @@ The counters count per session and start at 0 with a new one:
   A large pasted prompt counts too, so this is a hint, not proof of a discarded
   cache.
 
-Compare the first two to see whether keeping the cache warm paid off. A cold prompt
-costs about as much as 25 refreshes of the same context on Sonnet 5.5 and Opus 5.5,
-and 12.5 on Haiku 5.5. Other models differ (see [Cost](#cost)).
+Compare `refreshes sent` with `cold prompts` to see whether keeping the cache warm
+paid off. A cold prompt costs about as much as 25 refreshes of the same context on
+Sonnet 5.5 and Opus 5.5, and 12.5 on Haiku 5.5. Other models differ (see
+[Cost](#cost)).
 
 ## Configuration
 
@@ -146,8 +153,9 @@ provider's price list.
 > **Refreshes can cost twice as much as the table says.** In testing (Sonnet 5.5, a
 > context of about 270k tokens), roughly three in four refreshes read the context twice
 > from the cache and cost twice as much, about $0.07 instead of $0.03. The rest read it
-> once. The cause is not known. Check the bill of your provider to see what refreshes
-> cost in your setup.
+> once. The cause is not known. `/cache-warm status` counts the refreshes with
+> double-reads. Check the bill of your provider to see what refreshes cost in your
+> setup.
 
 The footer assumes that caching works and says `warm` from your first prompt. The
 first refresh checks that: it must read at least some tokens from the cache. If it

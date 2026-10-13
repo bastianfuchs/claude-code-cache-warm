@@ -27,6 +27,12 @@ export type CacheWarm = {
   // what made the latest request that renewed the cache; named in the debugWarnings
   // line
   lastUse?: 'turn' | 'refresh'
+  // input (read, written and uncached) of the latest model request of a turn; the
+  // yardstick for a double read. Unset after a compaction or a model switch, when the
+  // old size no longer fits.
+  lastInputTokens?: number
+  // refreshes that read at least 1.8 times lastInputTokens from the cache
+  doubleReadCount?: number
   note: string
 }
 

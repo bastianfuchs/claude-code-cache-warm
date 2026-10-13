@@ -3,6 +3,13 @@
 All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.2.0] - 2026-10-13
+
+### Added
+
+- `/cache-warm status` counts the refreshes with double-reads (estimated), the ones
+  that read the context twice from the cache.
+
 ## [0.1.1] - 2026-10-13
 
 ### Fixed
