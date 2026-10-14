@@ -7,6 +7,8 @@ cache warm while you are away from the keyboard.
 cache warm 3:42 (2 refreshes)
 ```
 
+The code of this mod was written by AI.
+
 ## Why
 
 The model API caches the conversation for 5 minutes (by default), counted from the
