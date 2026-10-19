@@ -78,6 +78,11 @@ runs. To disable the mod for good, use `/plugin disable cache-warm`.
 The counters count per session and start at 0 with a new one:
 
 - **refreshes sent:** all successful refreshes so far, across prompts.
+- **refreshes useful (estimated):** refreshes after which your next prompt found the
+  cache still warm, and how many prompts that covered. A
+  refresh counts as useful when it was part of a run that ended in a prompt before
+  the cache ran out; refreshes before a cold prompt, a pause or the idle limit do not.
+  An estimate: it follows the configured cache lifetime, not the real cache state.
 - **cold prompts (estimated):** prompts sent after the countdown had reached `cold`
   because the cache lifetime ran out, which paid the full price to rewrite the
   context. Prompts after a compaction, a model switch, `/clear` or a pause are not

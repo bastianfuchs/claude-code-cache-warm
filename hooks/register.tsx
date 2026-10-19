@@ -62,6 +62,8 @@ const cache = atom(
     refreshCount: 0,
     totalRefreshCount: 0,
     coldPromptCount: 0,
+    keptWarmPromptCount: 0,
+    usefulRefreshCount: 0,
     note: '',
   } as CacheWarm,
 )
@@ -402,6 +404,8 @@ export const register: Register = (on, options) => {
           : 'stopped (start with /cache-warm start)',
       ...(c.expiresAt === null ? ['no turn completed yet, no countdown'] : []),
       `refreshes sent: ${c.totalRefreshCount ?? 0}`,
+      `refreshes useful (estimated): ${c.usefulRefreshCount ?? 0}, ` +
+        `covering ${c.keptWarmPromptCount ?? 0} prompts`,
       `cold prompts (estimated): ${c.coldPromptCount ?? 0}`,
       ...(DEBUG_WARNINGS
         ? [`unexpected rewrites (estimated): ${c.rewriteCount ?? 0}`]
@@ -423,6 +427,10 @@ export const register: Register = (on, options) => {
   // is the user's activity and nothing else, so the cache fields stay as they are.
   // A prompt after /cache-warm pause ends the pause. It is not counted as cold: the
   // user let the cache run out on purpose, as with stop.
+  // A prompt that finds the cache still warm after at least one refresh since the
+  // previous prompt was kept warm by them: those refreshes count as useful. Refreshes
+  // before a cold prompt, a pause or a reset were not (and a refresh in a run that
+  // ended in the idle limit never gets here warm).
   on('prompt.submit', async ($, e, next) => {
     if ((await read($, cache)).isEnabled === null) await initState($)
     const now = await $.clock.now()
@@ -431,23 +439,35 @@ export const register: Register = (on, options) => {
     // Ends the debugWarnings line of an earlier request.
     if (DEBUG_WARNINGS) $.ui.status(undefined)
     isTurnRunning = true
-    await update($, cache, (c: CacheWarm) => ({
-      ...c,
-      refreshCount: 0,
-      coldPromptCount:
-        (c.coldPromptCount ?? 0) +
-        (c.isEnabled &&
+    await update($, cache, (c: CacheWarm) => {
+      const isKeptWarm =
+        c.isEnabled === true &&
         !c.isReset &&
         !c.isPaused &&
+        c.refreshCount > 0 &&
         c.expiresAt !== null &&
-        now >= c.expiresAt
-          ? 1
-          : 0),
-      isReset: false,
-      isPaused: false,
-      requestStartedAt: now,
-      note: TURN_NOTE,
-    }))
+        now < c.expiresAt
+      return {
+        ...c,
+        refreshCount: 0,
+        keptWarmPromptCount: (c.keptWarmPromptCount ?? 0) + (isKeptWarm ? 1 : 0),
+        usefulRefreshCount:
+          (c.usefulRefreshCount ?? 0) + (isKeptWarm ? c.refreshCount : 0),
+        coldPromptCount:
+          (c.coldPromptCount ?? 0) +
+          (c.isEnabled &&
+          !c.isReset &&
+          !c.isPaused &&
+          c.expiresAt !== null &&
+          now >= c.expiresAt
+            ? 1
+            : 0),
+        isReset: false,
+        isPaused: false,
+        requestStartedAt: now,
+        note: TURN_NOTE,
+      }
+    })
     return next(e)
   })
 

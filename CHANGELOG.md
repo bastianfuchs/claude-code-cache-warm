@@ -3,6 +3,13 @@
 All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.0] - 2026-10-19
+
+### Added
+
+- `/cache-warm status` shows refreshes useful: those that kept the cache warm until
+  your next prompt, and the number of prompts they covered.
+
 ## [0.3.0] - 2026-10-13
 
 ### Changed

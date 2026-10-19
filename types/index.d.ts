@@ -11,6 +11,10 @@ export type CacheWarm = {
   refreshCount: number
   totalRefreshCount: number
   coldPromptCount: number
+  // prompts that met a cache which refreshes had kept warm, and the refreshes since
+  // the previous prompt that bridged the gap to them (estimated, like coldPromptCount)
+  keptWarmPromptCount?: number
+  usefulRefreshCount?: number
   // the host emptied the cache (compaction, model switch) and no answer has written it
   // since; the next prompt pays for that whether or not the cache was kept warm, so it
   // is not counted as cold
