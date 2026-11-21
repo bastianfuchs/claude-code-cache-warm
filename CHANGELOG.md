@@ -3,6 +3,14 @@
 All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Documented
+
+- No refresh is sent during a long tool call within a turn. This is deliberate: in two
+  test rounds a refresh with an open tool call took in about twice the context and cost
+  about as much as a cold rewrite (see Limits in the README).
+
 ## [0.4.0] - 2026-10-19
 
 ### Added

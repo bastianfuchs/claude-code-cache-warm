@@ -175,6 +175,14 @@ read at session start only.
   its answer. After a long answer the footer shows the time that is really left, for
   example 1:00 after an answer that took 4 minutes. A single request that takes
   longer than the cache lifetime lets the cache expire while it runs.
+- **No refresh is sent while a turn runs, even during a long tool call.** A turn
+  renews the cache only with its own model requests. A tool call (a build, a download)
+  that runs longer than the cache lifetime sends none, so the cache expires although
+  the footer says `paused (turn)`. This is deliberate: in two test rounds, a refresh
+  during an open tool call kept the cache warm, but it took in about twice the
+  context, most of it as new cache writes, and cost roughly as much as a cold
+  rewrite. A refresh while idle did not. The cause is not known; a likely one is that
+  the model tries to use a tool, which makes a second request.
 - **If you interrupt a turn (ESC) before the answer has started, the footer falls
   back to the countdown from before your prompt.** The mod cannot tell whether your
   request had already reached the cache. The footer may then show less time than is
